@@ -24,6 +24,13 @@
 			<artifactId>spring-boot-starter-data-r2dbc</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>io.projectreactor.addons</groupId>
+			<artifactId>reactor-extra</artifactId>
+			<version>3.0.7.RELEASE</version>
+		</dependency>
+		<!-- Thanks for using https://jar-download.com -->
+
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>

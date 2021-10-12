@@ -15,26 +15,44 @@ import reactor.test.StepVerifier;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 @ExtendWith(MockitoExtension.class)
 public class TimeMetricsRepositoryTest {
 
     @Mock
     TimeMetricRepository timeMetricRepository;
+    public static final String DATE_TIME = "yyyy-MM-dd HH:mm";
+    public static final String DATE = "yyyy-MM-dd";
 
     @Test
-    void getAllServiceTest() {
+    void findAllByDatetimeBetweenTest() {
+        TimeMetricEntity a = new TimeMetricEntity();
+        a.setId(1L);
+        a.setTemperature(18);
+        LocalTime bb = LocalTime.of(11, 11, 10, 11);
+        a.setDatetime(LocalDateTime.of(LocalDate.of(2019, 11, 11), bb));
 
-        TimeMetricEntity b = new TimeMetricEntity();
-        b.setId(1L);
-        b.setTemperature("19 C°");
-        LocalTime aa = LocalTime.of(11, 11, 10, 11);
-        b.setDatetime(LocalDateTime.of(LocalDate.of(2019, 11, 11), aa));
+        Mockito.when(timeMetricRepository.findAllByDatetimeBetween(this.convertToDateTime("2019-10-13 11:11", DATE_TIME), this.convertToDateTime("2019-12-25 23:11", DATE_TIME))).thenReturn(Flux.just(a));
 
-        Mockito.when(timeMetricRepository.findAll()).thenReturn(Flux.just(b));
+        StepVerifier.create(timeMetricRepository.findAllByDatetimeBetween(this.convertToDateTime("2019-10-13 11:11", DATE_TIME), this.convertToDateTime("2019-12-25 23:11", DATE_TIME)))
+                .expectNext(a)
+                .expectComplete()
+                .verify();
+    }
 
-        StepVerifier.create(timeMetricRepository.findAll())
-                .expectNext(b)
+    @Test
+    void findAllByDateTest() {
+        TimeMetricEntity a = new TimeMetricEntity();
+        a.setId(1L);
+        a.setTemperature(18);
+        LocalTime bb = LocalTime.of(11, 11, 10, 11);
+        a.setDatetime(LocalDateTime.of(LocalDate.of(2019, 11, 11), bb));
+
+        Mockito.when(timeMetricRepository.findAllByDate(this.convertToDate("2019-10-13", DATE))).thenReturn(Flux.just(a));
+
+        StepVerifier.create(timeMetricRepository.findAllByDate(this.convertToDate("2019-10-13", DATE)))
+                .expectNext(a)
                 .expectComplete()
                 .verify();
     }
@@ -43,7 +61,7 @@ public class TimeMetricsRepositoryTest {
     void saveServiceTest() {
         TimeMetricEntity a = new TimeMetricEntity();
         a.setId(1L);
-        a.setTemperature("18 C°");
+        a.setTemperature(18);
         LocalTime bb = LocalTime.of(11, 11, 10, 11);
         a.setDatetime(LocalDateTime.of(LocalDate.of(2019, 11, 11), bb));
 
@@ -53,6 +71,18 @@ public class TimeMetricsRepositoryTest {
                 .expectNext(a)
                 .expectComplete()
                 .verify();
+    }
+
+
+    private LocalDateTime convertToDateTime(String date, String formatText) {
+        DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern(formatText);
+        return LocalDateTime.parse(date, FORMAT);
+    }
+
+
+    private LocalDate convertToDate(String date, String formatText) {
+        DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern(formatText);
+        return LocalDate.parse(date, FORMAT);
     }
 
 }

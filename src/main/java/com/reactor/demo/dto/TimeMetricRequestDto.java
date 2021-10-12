@@ -1,31 +1,25 @@
-package com.reactor.demo.entity;
+package com.reactor.demo.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Column;
-import org.springframework.data.relational.core.mapping.Table;
 
-
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 
-@Table("time_metric")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TimeMetricEntity {
-
-    @Id
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class TimeMetricRequestDto implements Serializable {
     private Long id;
-
-    @Column(value = "temperature")
     private Integer temperature;
-
-    @Column(value = "datetime")
+    private String unidad;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private LocalDateTime datetime;
+
 
 }

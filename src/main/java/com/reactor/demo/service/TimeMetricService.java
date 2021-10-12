@@ -12,6 +12,10 @@ import java.util.List;
 public interface TimeMetricService {
 
     Mono<List<TimeMetricHourDto>> getMetricByHour(String fechaIni, String fechaFin);
+
     Mono<TimeMetricDayDto> getMetricByDay(String fecha);
+
+    Flux<TimeMetricHourDto> getStadisticMetricByHours(String fecha);
+
     Mono<Void> save(TimeMetricRequestDto timeMetricStoreDto);
 }

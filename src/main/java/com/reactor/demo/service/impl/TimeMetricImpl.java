@@ -5,6 +5,7 @@ import com.reactor.demo.dto.TimeMetricDayDto;
 import com.reactor.demo.dto.TimeMetricHourDto;
 import com.reactor.demo.dto.TimeMetricRequestDto;
 import com.reactor.demo.entity.TimeMetricEntity;
+import com.reactor.demo.repository.StadisticRepository;
 import com.reactor.demo.repository.TimeMetricRepository;
 import com.reactor.demo.service.TimeMetricService;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +27,12 @@ public class TimeMetricImpl implements TimeMetricService {
     public static final String DATE_TIME = "yyyy-MM-dd HH:mm";
     public static final String DATE = "yyyy-MM-dd";
     private final TimeMetricRepository timeMetricRepository;
+    private final StadisticRepository stadisticRepository;
 
 
     @Override
     public Mono<List<TimeMetricHourDto>> getMetricByHour(String fechaIni, String fechaFin) {
-        Flux<TimeMetricEntity> timeMetric = timeMetricRepository.findAllByDatetimeBetween(this.convertToDateTime(fechaIni,DATE_TIME), this.convertToDateTime(fechaFin,DATE_TIME));
+        Flux<TimeMetricEntity> timeMetric = timeMetricRepository.findAllByDatetimeBetween(this.convertToDateTime(fechaIni, DATE_TIME), this.convertToDateTime(fechaFin, DATE_TIME));
         Mono<Integer> minimum = timeMetric.map(TimeMetricEntity::getTemperature).reduce(Math::min);
         Mono<Integer> maximum = timeMetric.map(TimeMetricEntity::getTemperature).reduce(Math::max);
         Mono<Double> average = timeMetric.map(TimeMetricEntity::getTemperature).collect(Collectors.averagingInt(p -> p));
@@ -43,7 +45,7 @@ public class TimeMetricImpl implements TimeMetricService {
 
     @Override
     public Mono<TimeMetricDayDto> getMetricByDay(String fecha) {
-        Flux<TimeMetricEntity> timeMetric = timeMetricRepository.findAllByDate(this.convertToDate(fecha,DATE));
+        Flux<TimeMetricEntity> timeMetric = timeMetricRepository.findAllByDate(this.convertToDate(fecha, DATE));
         Mono<Integer> minimum = timeMetric.map(TimeMetricEntity::getTemperature).reduce(Math::min);
         Mono<Integer> maximum = timeMetric.map(TimeMetricEntity::getTemperature).reduce(Math::max);
         Mono<Double> average = timeMetric.map(TimeMetricEntity::getTemperature).collect(Collectors.averagingInt(p -> p));
@@ -52,6 +54,11 @@ public class TimeMetricImpl implements TimeMetricService {
                 average).flatMap(dFlux ->
                 Mono.just(new TimeMetricDayDto().builder().date(splitStringForGettingDay(fecha)).min(dFlux.getT1()).max(dFlux.getT2()).average(dFlux.getT3()).build())
         );
+    }
+
+    @Override
+    public Flux<TimeMetricHourDto> getStadisticMetricByHours(String fecha) {
+        return TimeMetricCast.toModel(stadisticRepository.findAllByDate(this.convertToDate(fecha, DATE)));
     }
 
     @Override
@@ -71,11 +78,11 @@ public class TimeMetricImpl implements TimeMetricService {
         return LocalDate.parse(date, FORMAT);
     }
 
-    private String splitStringForGettingHours(String text){
+    private String splitStringForGettingHours(String text) {
         return text.split(" ")[1];
     }
 
-    private String splitStringForGettingDay(String text){
+    private String splitStringForGettingDay(String text) {
         return text.split(" ")[0];
     }
 

@@ -1,7 +1,6 @@
 package com.reactor.demo.repository;
 
 import com.reactor.demo.entity.TimeMetricEntity;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import reactor.core.publisher.Flux;

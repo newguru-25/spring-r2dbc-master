@@ -13,5 +13,8 @@ public interface TimeMetricRepository extends R2dbcRepository<TimeMetricEntity, 
     Flux<TimeMetricEntity> findAllByDatetimeBetween(LocalDateTime fechaIni, LocalDateTime fechaFin);
 
     @Query("SELECT * FROM time_metric WHERE datetime LIKE :fecha||'%'")
+    Flux<TimeMetricEntity> findAllByDateByRangeHour(LocalDate fecha);
+
+    @Query("SELECT * FROM time_metric WHERE datetime LIKE :fecha||'%'")
     Flux<TimeMetricEntity> findAllByDate(LocalDate fecha);
 }

@@ -6,12 +6,10 @@ import com.reactor.demo.dto.TimeMetricRequestDto;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-
 
 public interface TimeMetricService {
 
-    Mono<List<TimeMetricHourDto>> getMetricByHour(String fechaIni, String fechaFin);
+    Flux<TimeMetricHourDto> getMetricByHour(String fecha);
 
     Mono<TimeMetricDayDto> getMetricByDay(String fecha);
 

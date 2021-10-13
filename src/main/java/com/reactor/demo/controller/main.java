@@ -1,122 +1,163 @@
 package com.reactor.demo.controller;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.reactor.demo.dto.TimeMetricHourDto;
 import com.reactor.demo.entity.TimeMetricEntity;
+import com.reactor.demo.util.HourRange;
+import com.sun.tools.javac.Main;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws JsonProcessingException {
 
 
         TimeMetricEntity b = new TimeMetricEntity();
         b.setId(1L);
 //        19 C°
-        b.setTemperature(19);
-        LocalTime aa = LocalTime.of(11, 11, 10, 11);
-        b.setDatetime(LocalDateTime.of(LocalDate.of(2019, 11, 11), aa));
+        b.setTemperature(15);
+        LocalTime aa = LocalTime.of(11, 11);
+        b.setDatetime(LocalDateTime.of(LocalDate.of(2019, 10, 13), aa));
 
         TimeMetricEntity d = new TimeMetricEntity();
         d.setId(2L);
-        d.setTemperature(12);
-        LocalTime bb = LocalTime.of(22, 23, 10, 11);
-        d.setDatetime(LocalDateTime.of(LocalDate.of(2019, 11, 11), bb));
+        d.setTemperature(30);
+        LocalTime bb = LocalTime.of(11, 23);
+        d.setDatetime(LocalDateTime.of(LocalDate.of(2019, 10, 13), bb));
 
         TimeMetricEntity w = new TimeMetricEntity();
         w.setId(3L);
-        w.setTemperature(15);
-        LocalTime cc = LocalTime.of(17, 20, 10, 11);
-        w.setDatetime(LocalDateTime.of(LocalDate.of(2019, 11, 11), cc));
+        w.setTemperature(19);
+        LocalTime cc = LocalTime.of(16, 20);
+        w.setDatetime(LocalDateTime.of(LocalDate.of(2019, 10, 13), cc));
+
+        TimeMetricEntity e = new TimeMetricEntity();
+        e.setId(4L);
+        e.setTemperature(15);
+        LocalTime rr = LocalTime.of(14, 40);
+        e.setDatetime(LocalDateTime.of(LocalDate.of(2019, 10, 13), rr));
 
 
-        //List<String> data=new ArrayList<>();
+        Flux<TimeMetricEntity> result = Flux.just(b, d, w, e);
 
+        Mono<Map<Object, List<TimeMetricEntity>>> ssss = result.collect(Collectors.groupingBy(s -> {
+            String hours = String.valueOf(s.getDatetime().getHour());
+            String rangeName = (String) main.matchByHour(hours).get("name");
+            return rangeName;
+        }));
 
-//        Flux.just(b, d, w).subscribe(System.out::println);
+        ssss.flatMapIterable(s -> {
+            List<TimeMetricHourDto> results = new ArrayList<>();
 
-//        Flux.just(b, d, w).filter( data ->{
-////            System.err.println(data.getTemperature());
-//
-//            //return data.getTemperature().contains("19 C°");
-//        }).map(data->{
-//
-////            System.err.println(data);
-//            return data;
-//        }).subscribe(System.out::println);
-//        Stream dd=Arrays.asList(b, d, w).stream();
-//        System.err.println( Flux.fromStream(dd).toStream().min(Comparator.comparing(TimeMetricEntity::getTemperature)).get());
-//        System.err.println( Flux.just(b, d, w).toStream().max(Comparator.comparing(TimeMetricEntity::getTemperature)));
-//        System.err.println( Flux.just(b, d, w).toStream().mapToInt(data->data.getTemperature()).average());
-//        TimeMetricHourDto a=new TimeMetricHourDto();
+//            TimeMetricHourDto
+            for (Map.Entry<Object, List<TimeMetricEntity>> entry : s.entrySet()) {
+//                System.out.println(entry.getKey() + "/" + entry.getValue());
+                String key = (String) entry.getKey();
+                final String getHour = key.split("_")[1];
 
-        Flux<TimeMetricEntity> timeMetric = Flux.just(b, d, w);
+                TimeMetricHourDto timeMetric = TimeMetricHourDto.builder()
+                        .time((String) matchByHour(getHour).get("rangeBetween"))
+                        .min(s.get(entry.getKey()).stream().map(TimeMetricEntity::getTemperature).reduce(Math::min).get())
+                        .max(s.get(entry.getKey()).stream().map(TimeMetricEntity::getTemperature).reduce(Math::max).get())
+                        .average(s.get(entry.getKey()).stream().map(TimeMetricEntity::getTemperature).collect(Collectors.averagingInt(p -> p)))
+                        .build();
 
-//        timeMetric.map()
+                results.add(timeMetric);
+            }
+            results.sort(Comparator.comparing(TimeMetricHourDto::getTime));
+            return results;
+        }).subscribe(System.out::println);
+//        ssss.subscribe(System.out::println);
 
-//        timeMetric.map(data -> data.getTemperature()).reduce(Math::min).map(data->{
-//            System.err.println(data);
-//            return new TimeMetricHourDto().builder().min(data).build();
-//        }).subscribe(System.out::println);
-//        Mono.zip(Mono.just("a"), Mono.just(2))
-//                .flatMapMany(tup -> {
-//                    return Flux.range(1, tup.getT2()).map(i -> tup.getT1() + i);
-//                }).subscribe(System.out::println);
-
-//        Flux<String> fnameFlux = Flux.just("Ramesh","Amit","Vijay");
-//        Flux<String> lnameFlux = Flux.just("Sharma","Kumar","Lamba");
-//        Flux<String> deptFlux = Flux.just("Admin","IT","Acc.");
-//
-//        Flux<User> userFlux = Flux.zip(fnameFlux, lnameFlux, deptFlux)
-//                .flatMap(dFlux ->
-//                        Flux.just(new User(dFlux.getT1(), dFlux.getT2(), dFlux.getT2())));
-
-
-//        timeMetric.map(data -> data.getTemperature()).collect()
-
-
-//        timeMetric.map(data -> data.getTemperature()).reduce(Math::min).subscribe(System.out::println);
-//        timeMetric.map(data -> data.getTemperature()).reduce(Math::max).subscribe(System.out::println);
-//        timeMetric.map(data -> data.getTemperature()).collect(Collectors.averagingInt(p -> p))
 //        .subscribe(System.out::println);
 
 
-        Mono<Integer> sss = timeMetric.map(data -> data.getTemperature()).reduce(Math::min);
-        Mono<Integer> ssss = timeMetric.map(data -> data.getTemperature()).reduce(Math::max);
-        Mono<Double> sssss = timeMetric.map(data -> data.getTemperature()).collect(Collectors.averagingInt(p -> p));
-
-        Flux<String> fnameFlux = Flux.just("Ramesh", "Amit", "Vijay");
-        Flux<String> lnameFlux = Flux.just("Sharma", "Kumar", "Lamba");
-        Flux<String> deptFlux = Flux.just("Admin", "IT", "Acc.");
-
-        Mono<TimeMetricHourDto> userFlux= Mono.zip(sss, ssss, sssss).flatMap(dFlux ->
-                        Mono.just(new TimeMetricHourDto().builder().min(dFlux.getT1()).build())
-        );
-
-        userFlux.subscribe(x -> System.out.println(x));
-
-//        Flux.zip(fnameFlux, lnameFlux, deptFlux)
-//                .flatMap(dFlux ->
-//                        Flux.just(new User(dFlux.getT1(), dFlux.getT2(), dFlux.getT2())));
+//        Mono<Integer> minimum = timeMetric.map(TimeMetricEntity::getTemperature).reduce(Math::min);
+//        Mono<Integer> maximum = timeMetric.map(TimeMetricEntity::getTemperature).reduce(Math::max);
+//        Mono<Double> average = timeMetric.map(TimeMetricEntity::getTemperature).collect(Collectors.averagingInt(p -> p));
 
 
-//        a.setMin(timeMetric.toStream().min(Comparator.comparing(TimeMetricEntity::getTemperature)).get().getTemperature().intValue());
-//        a.setMax(timeMetric.toStream().max(Comparator.comparing(TimeMetricEntity::getTemperature)).get().getTemperature().intValue());
-//        a.setAverage(Flux.just(b, d, w).toStream().mapToInt(data->data.getTemperature()).average().getAsDouble());
-//        System.err.println(a);
-//        a.setDatetime();
+//        System.err.println(HourRange.valueOf("HOUR_0").getHour());
 
-//                as(MathFlux.min(Comparator.comparing(TimeMetricEntity::getTemperature)));
+//        result.subscribe(System.out::println);
+
+
+//        Mono<List<TimeMetricEntity>> ss = result.collectList();
+
+
+//        ObjectMapper mapper = new ObjectMapper();
+//
+//
+//      String json=  "[\n" +
+//                "                \"01/01/2010\",\n" +
+//                "                \"02/01/2010\",\n" +
+//                "                \"03/01/2010\",\n" +
+//                "                \"05/01/2010\",\n" +
+//                "                \"10/01/2010\",\n" +
+//                "                \"11/01/2010\",\n" +
+//                "                \"22/01/2010\",\n" +
+//                "                \"23/01/2010\",\n" +
+//                "                \"24/01/2010\"\n" +
+//                "]";
+//
+//        List<String> dateList =Arrays.asList(mapper.readValue(json, String[].class));
+//
+//
+////         = //contains the dates
+//                Collections.sort(dateList);
+//
+//        List resultss = new ArrayList(); // to store the list of intervals
+//        for(int i=0; i<dateList.size()-1; i+=2) {
+//            List interval = new ArrayList();// to store one interval
+//            interval.add(dateList.get(i));
+//            interval.add(dateList.get(i+1));
+//            resultss.add(interval);
+//        }
+
+//        System.err.println(resultss);
+
+        //3 apple, 2 banana, others 1
+//        List<Item> items = Arrays.asList(
+//                new Item("apple", 10, new BigDecimal("9.99")),
+//                new Item("banana", 20, new BigDecimal("19.99")),
+//                new Item("orang", 10, new BigDecimal("29.99")),
+//                new Item("watermelon", 10, new BigDecimal("29.99")),
+//                new Item("papaya", 20, new BigDecimal("9.99")),
+//                new Item("apple", 10, new BigDecimal("9.99")),
+//                new Item("banana", 10, new BigDecimal("19.98")),
+//                new Item("apple", 20, new BigDecimal("9.99"))
+//        );
+//
+////        group by price
+//        Map<BigDecimal, List<Item>> groupByPriceMap =
+//                items.stream().collect(Collectors.groupingBy(Item::getPrice));
+//
+//        System.err.println(groupByPriceMap);
+
     }
 
-    private String splitString(String text){
-        return text.split(" ")[1];
+    private static Map<String, Object> matchByHour(String text) {
+        Map<String, Object> map = new HashMap<>();
+        String constante = "HOUR_";
+        try {
+            map.put("name", HourRange.valueOf(constante + text).getName());
+            map.put("rangeBetween", HourRange.valueOf(constante + text).getRangeBetweenHours());
+            map.put("exist", Boolean.TRUE);
+        } catch (Exception e) {
+            map.put("name", "none");
+            map.put("exist", Boolean.FALSE);
+        }
+        return map;
     }
 
 }

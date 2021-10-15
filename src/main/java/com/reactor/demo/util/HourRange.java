@@ -26,7 +26,7 @@ public enum HourRange {
     HOUR_20("20", "20:00 - 21:00", "HOUR_20"),
     HOUR_21("21", "21:00 - 22:00", "HOUR_21"),
     HOUR_22("22", "22:00 - 23:00", "HOUR_22"),
-    HOUR_23("23", "23:00 - 24:00", "HOUR_23");
+    HOUR_23("23", "23:00 - 00:00", "HOUR_23");
 
     private String hour;
     private String rangeBetweenHours;

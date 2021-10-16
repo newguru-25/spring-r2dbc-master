@@ -11,9 +11,12 @@ public interface TimeMetricService {
 
     Flux<TimeMetricHourDto> getMetricByHour(String fecha);
 
+
+    Flux<TimeMetricHourDto> anotherMethodEquals(String fecha);
     Mono<TimeMetricDayDto> getMetricByDay(String fecha);
 
     Flux<TimeMetricHourDto> getStadisticMetricByHours(String fecha);
 
     Mono<Void> save(TimeMetricRequestDto timeMetricStoreDto);
 }
+

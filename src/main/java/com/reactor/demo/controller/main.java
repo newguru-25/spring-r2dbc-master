@@ -50,33 +50,43 @@ public class main {
 
         Flux<TimeMetricEntity> result = Flux.just(b, d, w, e);
 
-        Mono<Map<Object, List<TimeMetricEntity>>> ssss = result.collect(Collectors.groupingBy(s -> {
-            String hours = String.valueOf(s.getDatetime().getHour());
-            String rangeName = (String) main.matchByHour(hours).get("name");
-            return rangeName;
-        }));
+//        System.err.println(matchByHour("11"));
 
-        ssss.flatMapIterable(s -> {
-            List<TimeMetricHourDto> results = new ArrayList<>();
+        result.groupBy(data -> data.getDatetime().getHour()
+        ).flatMap(Flux::collectList).flatMapIterable(main::getStadistic).subscribe(System.err::println);
+//
 
-//            TimeMetricHourDto
-            for (Map.Entry<Object, List<TimeMetricEntity>> entry : s.entrySet()) {
-//                System.out.println(entry.getKey() + "/" + entry.getValue());
-                String key = (String) entry.getKey();
-                final String getHour = key.split("_")[1];
 
-                TimeMetricHourDto timeMetric = TimeMetricHourDto.builder()
-                        .time((String) matchByHour(getHour).get("rangeBetween"))
-                        .min(s.get(entry.getKey()).stream().map(TimeMetricEntity::getTemperature).reduce(Math::min).get())
-                        .max(s.get(entry.getKey()).stream().map(TimeMetricEntity::getTemperature).reduce(Math::max).get())
-                        .average(s.get(entry.getKey()).stream().map(TimeMetricEntity::getTemperature).collect(Collectors.averagingInt(p -> p)))
-                        .build();
+        //        Mono<Map<Object, List<TimeMetricEntity>>> ssss = result.collect(Collectors.groupingBy(s -> {
+//            String hours = String.valueOf(s.getDatetime().getHour());
+//            String rangeName = (String) main.matchByHour(hours).get("name");
+//            return rangeName;
+//        }));
 
-                results.add(timeMetric);
-            }
-            results.sort(Comparator.comparing(TimeMetricHourDto::getTime));
-            return results;
-        }).subscribe(System.out::println);
+//        result.subscribe(System.out::println);
+        return;
+
+//        ssss.flatMapIterable(s -> {
+//            List<TimeMetricHourDto> results = new ArrayList<>();
+//
+////            TimeMetricHourDto
+//            for (Map.Entry<Object, List<TimeMetricEntity>> entry : s.entrySet()) {
+////                System.out.println(entry.getKey() + "/" + entry.getValue());
+//                String key = (String) entry.getKey();
+//                final String getHour = key.split("_")[1];
+//
+//                TimeMetricHourDto timeMetric = TimeMetricHourDto.builder()
+//                        .time((String) matchByHour(getHour).get("rangeBetween"))
+//                        .min(s.get(entry.getKey()).stream().map(TimeMetricEntity::getTemperature).reduce(Math::min).get())
+//                        .max(s.get(entry.getKey()).stream().map(TimeMetricEntity::getTemperature).reduce(Math::max).get())
+//                        .average(s.get(entry.getKey()).stream().map(TimeMetricEntity::getTemperature).collect(Collectors.averagingInt(p -> p)))
+//                        .build();
+//
+//                results.add(timeMetric);
+//            }
+//            results.sort(Comparator.comparing(TimeMetricHourDto::getTime));
+//            return results;
+//        }).subscribe(System.out::println);
 //        ssss.subscribe(System.out::println);
 
 //        .subscribe(System.out::println);
@@ -146,11 +156,24 @@ public class main {
 
     }
 
+
+    private static List<TimeMetricHourDto> getStadistic(List<TimeMetricEntity> data) {
+        String hour = String.valueOf(data.get(0).getDatetime().getHour());
+        TimeMetricHourDto timeMetric = TimeMetricHourDto.builder()
+                .time((String) matchByHour(hour).get("rangeBetween"))
+                .min(data.stream().map(TimeMetricEntity::getTemperature).reduce(Math::min).get())
+                .max(data.stream().map(TimeMetricEntity::getTemperature).reduce(Math::max).get())
+                .average(data.stream().map(TimeMetricEntity::getTemperature).collect(Collectors.averagingInt(p -> p)))
+                .build();
+        return Collections.singletonList(timeMetric);
+    }
+
     private static Map<String, Object> matchByHour(String text) {
         Map<String, Object> map = new HashMap<>();
         String constante = "HOUR_";
         try {
             map.put("name", HourRange.valueOf(constante + text).getName());
+            map.put("hour", HourRange.valueOf(constante + text).getHour());
             map.put("rangeBetween", HourRange.valueOf(constante + text).getRangeBetweenHours());
             map.put("exist", Boolean.TRUE);
         } catch (Exception e) {

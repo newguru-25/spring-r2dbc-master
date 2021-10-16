@@ -19,7 +19,8 @@ public class TimeMetricsController {
 
     @GetMapping("/rangohora")
     public Flux<TimeMetricHourDto> getMetricByHour(@RequestParam String fecha) {
-        return timeMetricService.getMetricByHour(fecha);
+        return timeMetricService.anotherMethodEquals(fecha);
+//        return timeMetricService.getMetricByHour(fecha);
     }
 
     @GetMapping("/rangodia")

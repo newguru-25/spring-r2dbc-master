@@ -1,5 +1,7 @@
 package com.reactor.demo.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.reactor.demo.cast.TimeMetricCast;
 import com.reactor.demo.controller.main;
 import com.reactor.demo.dto.TimeMetricDayDto;
@@ -12,6 +14,9 @@ import com.reactor.demo.service.TimeMetricService;
 import com.reactor.demo.util.HourRange;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.socket.WebSocketHandler;
+import org.springframework.web.reactive.socket.WebSocketMessage;
+import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -30,7 +35,6 @@ public class TimeMetricImpl implements TimeMetricService {
     public static final String RANGE_BETWEEN = "rangeBetween";
     private final TimeMetricRepository timeMetricRepository;
     private final StadisticRepository stadisticRepository;
-
 
     @Override
     public Flux<TimeMetricHourDto> getMetricByHour(String fecha) {
@@ -62,12 +66,41 @@ public class TimeMetricImpl implements TimeMetricService {
     }
 
     @Override
-    public Flux<TimeMetricHourDto> anotherMethodEquals(String fecha) {
-        Flux<TimeMetricEntity> timeMetrics = timeMetricRepository.findAllByDateByRangeHour(this.convertToDate(fecha, DATE));
+    public Flux<List<TimeMetricHourDto>> anotherMethodEquals(String fecha) {
+        Flux<TimeMetricEntity> timeMetrics = timeMetricRepository.findAllByDateByRangeHour(this.convertToDate(removeDoubleQuotes(fecha), DATE));
         return timeMetrics.groupBy(TimeMetricImpl::getHour)
                 .flatMap(Flux::collectList)
-                .flatMapIterable(TimeMetricImpl::getStadistic).
-                sort(Comparator.comparing(TimeMetricHourDto::getTime));
+                .flatMapIterable(TimeMetricImpl::getStadistic)
+                .sort(Comparator.comparing(TimeMetricHourDto::getTime))
+                .flatMap(Flux::just)
+                .collectList()
+                .flux()
+                ;
+
+    }
+
+
+    public Flux<String> getMetricByHourForWebsocket(String fecha) {
+        ObjectMapper mapper = new ObjectMapper();
+        Flux<TimeMetricEntity> timeMetrics = timeMetricRepository.findAllByDateByRangeHour(this.convertToDate(removeDoubleQuotes(fecha), DATE));
+
+        return timeMetrics.groupBy(TimeMetricImpl::getHour)
+                .flatMap(Flux::collectList)
+                .flatMapIterable(TimeMetricImpl::getStadistic)
+                .sort(Comparator.comparing(TimeMetricHourDto::getTime))
+                .map(datas ->
+                        {
+                            try {
+                                return mapper.writeValueAsString(datas);
+                            } catch (JsonProcessingException s) {
+                                s.printStackTrace();
+                                return null;
+                            }
+                        }
+                )
+                ;
+
+
     }
 
     @Override
@@ -94,9 +127,11 @@ public class TimeMetricImpl implements TimeMetricService {
     }
 
 
-    private LocalDateTime convertToDateTime(String date, String formatText) {
-        DateTimeFormatter FORMAT = DateTimeFormatter.ofPattern(formatText);
-        return LocalDateTime.parse(date, FORMAT);
+    public String removeDoubleQuotes(String request) {
+        if (request.contains("\"\""))
+            return request.replace("\"", "");
+        else
+            return request;
     }
 
 

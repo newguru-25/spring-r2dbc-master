@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class main {
 
     public static void main(String[] args) throws JsonProcessingException {
-
+        ObjectMapper mapper = new ObjectMapper();
 
         TimeMetricEntity b = new TimeMetricEntity();
         b.setId(1L);
@@ -53,7 +53,13 @@ public class main {
 //        System.err.println(matchByHour("11"));
 
         result.groupBy(data -> data.getDatetime().getHour()
-        ).flatMap(Flux::collectList).flatMapIterable(main::getStadistic).subscribe(System.err::println);
+        ).flatMap(Flux::collectList)
+                .flatMapIterable(main::getStadistic)
+                .flatMap(sss -> Flux::just)
+                .collectList()
+                .subscribe(System.err::println);
+//        .println(dd);
+//                .subscribe(System.err::println);
 //
 
 
